@@ -1,0 +1,35 @@
+services:
+    # Service untuk aplikasi Laravel
+    sjo-web:
+        user: "1000:1000"
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: sjo_web
+        volumes:
+            - .:/var/www/html
+        networks:
+            - sjo-web-network
+
+    # Service untuk Nginx reverse proxy
+# Service untuk Nginx reverse proxy
+    nginx:
+        user: "1000:1000"
+        build:
+            context: .docker/nginx
+            dockerfile: Dockerfile
+        container_name: nginx_proxy
+        volumes:
+            - .:/var/www/html
+            - .docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+        ports:
+            - "8080:8001"
+        networks:
+            - sjo-web-network
+        depends_on:
+            - sjo-web
+
+# Definisikan network agar kedua service bisa saling berkomunikasi
+networks:
+    sjo-web-network:
+        driver: bridge
