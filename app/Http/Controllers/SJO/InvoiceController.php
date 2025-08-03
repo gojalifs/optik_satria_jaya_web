@@ -57,6 +57,7 @@ class InvoiceController extends Controller
                 function (Browsershot $shot) {
                     $shot->setIncludePath(config('app.node_path', '/home/fajar/.nvm/versions/node/v22.12.0/bin'))
                     ->setNodeBinary(config('app.node_path', '/home/fajar/.nvm/versions/node/v22.12.0/node'))
+                    ->setChromePath(config('app.chrome_path', '/home/fajar/.cache/puppeteer/chrome/linux-138.0.7204.168/chrome-linux64/chrome'))
                     ->setNpmBinary(config('app.node_path', '/home/fajar/.nvm/versions/node/v22.12.0/npm'));
                 }
             )

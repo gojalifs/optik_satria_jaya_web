@@ -130,5 +130,6 @@ return [
     | generating PDFs or other Node.js related functionalities.
     |*/
     'node_path' => env('NODE_PATH', '/usr/bin/node'),
+    'chrome_path' => env('CHROME_PATH', '/usr/bin/google-chrome'),
 
 ];
