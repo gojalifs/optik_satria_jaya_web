@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
+use Spatie\Browsershot\Browsershot;
 use Spatie\LaravelPdf\Facades\Pdf;
 
 class InvoiceController extends Controller
@@ -35,7 +36,7 @@ class InvoiceController extends Controller
 
         $signedUrl = URL::temporarySignedRoute(
             'pdf.download',
-            now()->addMinutes(5),
+            now()->addMinutes(50),
             ['id' => $transaction->id]
         );
 
@@ -49,11 +50,16 @@ class InvoiceController extends Controller
     {
         $transaction = Transaction::findOrFail($id);
 
-        $pdf = Pdf::view('pdf.invoice', [
+        return Pdf::view('pdf.invoice', [
             'transaction' => $transaction,
-        ])->set_include_path(config('app.node_path'));
-
-        // stream pdf
-        return $pdf->stream('invoice_' . $transaction->invoice_number . '.pdf');
+        ])
+            ->withBrowsershot(
+                function (Browsershot $shot) {
+                    $shot->setIncludePath(config('app.node_path', '/home/fajar/.nvm/versions/node/v22.12.0/bin'))
+                    ->setNodeBinary(config('app.node_path', '/home/fajar/.nvm/versions/node/v22.12.0/node'))
+                    ->setNpmBinary(config('app.node_path', '/home/fajar/.nvm/versions/node/v22.12.0/npm'));
+                }
+            )
+            ->name('invoice_' . $transaction->invoice_number . '.pdf');
     }
 }
