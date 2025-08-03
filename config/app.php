@@ -123,4 +123,12 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*|--------------------------------------------------------------------------
+    | Node.js Path
+    |--------------------------------------------------------------------------
+    | This path is used to include Node.js in the application for tasks such as
+    | generating PDFs or other Node.js related functionalities.
+    |*/
+    'node_path' => env('NODE_PATH', '/usr/bin/node'),
+
 ];

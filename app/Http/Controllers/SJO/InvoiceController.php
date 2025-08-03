@@ -51,8 +51,9 @@ class InvoiceController extends Controller
 
         $pdf = Pdf::view('pdf.invoice', [
             'transaction' => $transaction,
-        ]);
+        ])->set_include_path(config('app.node_path'));
 
-        return $pdf->download('invoice_' . $transaction->invoice_number . '.pdf');
+        // stream pdf
+        return $pdf->stream('invoice_' . $transaction->invoice_number . '.pdf');
     }
 }
