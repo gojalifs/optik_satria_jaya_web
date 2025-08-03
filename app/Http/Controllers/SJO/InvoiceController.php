@@ -51,28 +51,28 @@ class InvoiceController extends Controller
     {
         $transaction = Transaction::findOrFail($id);
 
-        return FacadePdf::loadView('pdf.invoice', [
-            'transaction' => $transaction,
-        ])
-            ->setPaper('a4')
-            ->setOption('isHtml5ParserEnabled', true)
-            ->setOption('isRemoteEnabled', true)
-            ->setOption('isPhpEnabled', true)
-            ->setOption('dpi', 96)
-            ->setOption('defaultFont', 'sans-serif')
-            ->stream('invoice_' . $transaction->invoice_number . '.pdf');
-
-        // return Pdf::view('pdf.invoice', [
+        // return FacadePdf::loadView('pdf.invoice', [
         //     'transaction' => $transaction,
         // ])
-        //     ->withBrowsershot(
-        //         function (Browsershot $shot) {
-        //             $shot->setIncludePath(config('app.node_path', '/home/fajar/.nvm/versions/node/v22.12.0/bin'))
-        //             ->setNodeBinary(config('app.node_path', '/home/fajar/.nvm/versions/node/v22.12.0/node'))
-        //             ->setChromePath(config('app.chrome_path', '/home/fajar/.cache/puppeteer/chrome/linux-138.0.7204.168/chrome-linux64/chrome'))
-        //             ->setNpmBinary(config('app.node_path', '/home/fajar/.nvm/versions/node/v22.12.0/npm'));
-        //         }
-        //     )
-        //     ->name('invoice_' . $transaction->invoice_number . '.pdf');
+        //     ->setPaper('a4')
+        //     ->setOption('isHtml5ParserEnabled', true)
+        //     ->setOption('isRemoteEnabled', true)
+        //     ->setOption('isPhpEnabled', true)
+        //     ->setOption('dpi', 96)
+        //     ->setOption('defaultFont', 'sans-serif')
+        //     ->stream('invoice_' . $transaction->invoice_number . '.pdf');
+
+        return Pdf::view('pdf.invoice', [
+            'transaction' => $transaction,
+        ])
+            ->withBrowsershot(
+                function (Browsershot $shot) {
+                    $shot->setIncludePath(config('app.node_path', '/home/fajar/.nvm/versions/node/v22.12.0/bin'))
+                    ->setNodeBinary(config('app.node_path', '/home/fajar/.nvm/versions/node/v22.12.0/node'))
+                    ->setChromePath(config('app.chrome_path', '/home/fajar/.cache/puppeteer/chrome/linux-138.0.7204.168/chrome-linux64/chrome'))
+                    ->setNpmBinary(config('app.node_path', '/home/fajar/.nvm/versions/node/v22.12.0/npm'));
+                }
+            )
+            ->name('invoice_' . $transaction->invoice_number . '.pdf');
     }
 }
