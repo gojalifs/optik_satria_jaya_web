@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\SJO\InvoiceController;
+use App\Http\Controllers\SJO\PrivacayPolicyController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -15,8 +16,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // Route::middleware(['signature_verification'])->group(function(){
-    Route::post('test', [InvoiceController::class, 'test']);
+Route::post('test', [InvoiceController::class, 'test']);
 // });
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+Route::get('privacy', [PrivacayPolicyController::class, 'index'])->name('privacy');
+
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';

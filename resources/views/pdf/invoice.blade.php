@@ -87,7 +87,7 @@
 
     <!-- Customer Details -->
     <div style="margin: 0px 35px;">
-        <table style="width: 100%; margin-bottom: 16px;" cellspacing="0" cellpadding="4">
+        <table style="width: 100%; margin-bottom: 16px;" cellspacing="0" cellpadding="1">
             <tr>
                 <td style="width: 180px;">Sudah Terima Dari</td>
                 <td>: {{ $transaction['receive_from'] }}</td>
@@ -109,7 +109,7 @@
         <!-- Rincian Pembayaran -->
         <div style="margin-left: 30px;">
             <div style="margin-bottom: 6px; padding-left: 4px;">Kacamata</div>
-            <table style="width: 100%;" cellspacing="0" cellpadding="4">
+            <table style="width: 100%;" cellspacing="0" cellpadding="1">
                 <tr>
                     <td style="width: 150px; ">Jenis Frame</td>
                     <td style="width: 10px; ">:</td>
@@ -147,7 +147,7 @@
     </div>
 
     <!-- Signature -->
-    <div style="margin-top: 32px;">
+    <div style="margin-top: 16px;">
         <table style="width: 100%;">
             <tr>
                 <td style="width: 60%;"></td>
