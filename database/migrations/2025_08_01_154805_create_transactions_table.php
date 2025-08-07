@@ -24,7 +24,7 @@ return new class extends Migration
             $table->decimal('lens_price', 10, 2);
             $table->decimal('total_price', 10, 2);
             $table->string('amount_in_words');
-            $table->date('date')->default(now()->format('Y-m-d')); // Default to current date
+            $table->string('date')->default(now()->format('Y-m-d')); // Default to current date
             $table->timestamps();
         });
     }
