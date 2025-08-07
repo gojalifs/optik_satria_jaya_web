@@ -115,8 +115,9 @@
                     <td style="width: 10px;">:</td>
                     <td style="width: 300px;">{{ $transaction['frame_type'] }}</td>
                     <td style="width: 10px;">:</td>
+                    <td> Rp</td>
                     <td style="width: 100px; padding-right: 24px; text-align: right;">
-                        {{ 'Rp' . number_format($transaction['frame_price'], 0, ',', '.') }}
+                        {{ number_format($transaction['frame_price'], 0, ',', '.') }}
                     </td>
                 </tr>
 
@@ -125,20 +126,24 @@
                     <td>:</td>
                     <td>{{ $transaction['lens_type'] }}</td>
                     <td>:</td>
+                    <td> Rp</td>
                     <td style="width: 100px; padding-right: 24px; text-align: right;">
-                        {{ 'Rp' . number_format($transaction['lens_price'], 0, ',', '.') }}
+                        {{ number_format($transaction['lens_price'], 0, ',', '.') }}
                     </td>
                 </tr>
             </table>
         </div>
 
         <!-- Total -->
-        <table style="width: 100%; margin-top: 16px;" cellspacing="0" cellpadding="4">
+        <table style="width: 100%; margin-top: 16px;" cellspacing="0" cellpadding="1">
             <tr>
-                <td style="width: 468px;">Total Pembayaran</td>
-                <td style="padding-left: 21px">:</td>
-                <td style="padding-right: 22px; padding-left: 24px;">
-                    {{ 'Rp' . number_format($transaction['total_price'], 0, ',', '.') }}</td>
+                <td style="width: 150px;">Total Pembayaran</td>
+                <td style="width: 10px;"></td>
+                <td style="width: 330px;"></td>
+                <td style="width: 10px; text-align: right;">:</td>
+                <td> Rp</td>
+                <td style="width: 100px; padding-right: 24px; text-align: right;">
+                    {{ number_format($transaction['total_price'], 0, ',', '.') }}</td>
             </tr>
         </table>
 
