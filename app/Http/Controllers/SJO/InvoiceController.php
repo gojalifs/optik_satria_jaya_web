@@ -6,9 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
-use Spatie\Browsershot\Browsershot;
-use Spatie\LaravelPdf\Facades\Pdf;
 use Throwable;
 
 class InvoiceController extends Controller
@@ -39,7 +38,7 @@ class InvoiceController extends Controller
 
             $signedUrl = URL::temporarySignedRoute(
                 'pdf.download',
-                now()->addMinutes(50),
+                now()->addMinutes(10),
                 ['id' => $transaction->id]
             );
 
@@ -64,31 +63,33 @@ class InvoiceController extends Controller
 
     public function download($id)
     {
-        $transaction = Transaction::findOrFail($id);
+        try {
+            $transaction = Transaction::findOrFail($id);
 
-        return FacadePdf::loadView('pdf.invoice', [
-            'transaction' => $transaction,
-        ])
-            ->setPaper('a4')
-            ->setOption('isHtml5ParserEnabled', true)
-            ->setOption('isRemoteEnabled', true)
-            ->setOption('isPhpEnabled', true)
-            ->setOption('dpi', 96)
-            ->setOption('defaultFont', 'sans-serif')
-            ->download('invoice_' . $transaction->invoice_number . '.pdf');
-            // ->stream('invoice_' . $transaction->invoice_number . '.pdf');
+            $filename = preg_replace('/[^a-zA-Z0-9]/', '_', $transaction->invoice_number);
+            $filename = strtolower($filename);
+            $filename = 'invoice_' . $filename . '.pdf';
 
-        // return Pdf::view('pdf.invoice', [
-        //     'transaction' => $transaction,
-        // ])
-        //     ->withBrowsershot(
-        //         function (Browsershot $shot) {
-        //             $shot->setIncludePath(config('app.node_path', '/home/fajar/.nvm/versions/node/v22.12.0/bin'))
-        //             ->setNodeBinary(config('app.node_path', '/home/fajar/.nvm/versions/node/v22.12.0/node'))
-        //             ->setChromePath(config('app.chrome_path', '/home/fajar/.cache/puppeteer/chrome/linux-138.0.7204.168/chrome-linux64/chrome'))
-        //             ->setNpmBinary(config('app.node_path', '/home/fajar/.nvm/versions/node/v22.12.0/npm'));
-        //         }
-        //     )
-        //     ->name('invoice_' . $transaction->invoice_number . '.pdf');
+            return FacadePdf::loadView('pdf.invoice', [
+                'transaction' => $transaction,
+            ])
+                ->setPaper('a4')
+                ->setOption('isHtml5ParserEnabled', true)
+                ->setOption('isRemoteEnabled', true)
+                ->setOption('isPhpEnabled', true)
+                ->setOption('dpi', 96)
+                ->setOption('defaultFont', 'sans-serif')
+                ->download($filename);
+        } catch (Throwable $e) {
+            Log::error('Error downloading invoice: ' . $e->getMessage(), [
+                'transaction_id' => $id,
+                'exception' => $e,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error downloading invoice: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }
