@@ -60,7 +60,8 @@ class InvoiceController extends Controller
             ->setOption('isPhpEnabled', true)
             ->setOption('dpi', 96)
             ->setOption('defaultFont', 'sans-serif')
-            ->stream('invoice_' . $transaction->invoice_number . '.pdf');
+            ->download('invoice_' . $transaction->invoice_number . '.pdf');
+            // ->stream('invoice_' . $transaction->invoice_number . '.pdf');
 
         // return Pdf::view('pdf.invoice', [
         //     'transaction' => $transaction,
