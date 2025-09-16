@@ -1,0 +1,46 @@
+services:
+  php-fpm:
+    image: php:8.3-fpm-alpine
+    container_name: sjo-laravel-green
+    working_dir: /var/www/html
+    volumes:
+      - app-green:/var/www/html
+    networks: [app, web]
+    depends_on: [app-web]
+
+  app-web:
+    image: ${REGISTRY:-local}/sjo-laravel-app:${BUILD_TAG:-green}
+    container_name: sjo-laravel-green-web
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_KEY: ${APP_KEY}
+      APP_URL: https://optik.hahapa.my.id
+      DB_HOST: ${DB_HOST}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
+      CACHE_DRIVER: ${CACHE_DRIVER:-file}
+      SESSION_DRIVER: ${SESSION_DRIVER:-file}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+    volumes:
+      - app-green:/var/www/html
+    networks: [app, web]
+    
+    # ### traefik label: enable from jenkins
+    labels:
+      - "traefik.enable=${GREEN_ACTIVE:-false}"
+      - "traefik.http.routers.laravel.rule=Host(`optik.hahapa.my.id`)"
+      - "traefik.http.routers.laravel.entrypoints=websecure"
+      - "traefik.http.routers.laravel.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
+      - "traefik.http.routers.laravel.service=sjo-laravel-green-svc"
+      - "traefik.http.services.laravel-green-svc.loadbalancer.server.port=80"
+
+volumes:
+  app-green:
+
+networks:
+  web:
+    external: true
+  app:
+    driver: bridge

@@ -1,57 +1,69 @@
-# Gunakan image PHP-FPM dengan Alpine Linux sebagai base
-FROM php:8.3-fpm-alpine
+# ---- Stage 1: deps PHP (composer) ----
 
-# Setel working directory di dalam container
+FROM composer:2 AS vendor
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-plugins --no-scripts --no-interaction
+
+# ---- Stage 2: deps JS (npm) ----
+FROM node:20 AS node_modules
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# ---- Stage 3: runtime PHP-FPM ----
+FROM php:8.3-fpm-alpine AS php_runtime
 WORKDIR /var/www/html
 
-# Install dependencies yang dibutuhkan
-# `nodejs` dan `npm` ditambahkan di sini
+# Install php extensions
 RUN apk add --no-cache \
-    git \
-    curl \
-    libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
-    icu-dev \
-    oniguruma-dev \
-    libzip-dev \
-    sqlite-dev \
-    nodejs \
-    npm
-
-# Install PHP extensions
-RUN docker-php-ext-install pdo pdo_sqlite zip exif pcntl \
+    bash git icu-dev libzip-dev oniguruma-dev libzip-dev zip libpng-dev freetype-dev libjpeg-turbo-dev \
+    && docker-php-ext-configure intl \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) gd \
-    && docker-php-ext-install intl 
+    && docker-php-ext-install -j$(nproc) intl pdo pdo-sqlite zip gd bcmath opcache 
+# opcache tuning
+RUN { \
+    echo 'opcache.enable=1'; \
+    echo 'opcache.enable_cli=1'; \
+    echo 'opcache.validate_timestamps=1'; \
+    echo 'opcache.jit=1255' \
+    echo 'opcache.memory_consumption=128'; \
+    echo 'opcache.interned_strings_buffer=8'; \
+    echo 'opcache.max_accelerated_files=4000'; \
+    echo 'opcache.revalidate_freq=2'; \
+    echo 'opcache.fast_shutdown=1'; \
+    } > /usr/local/etc/php/conf.d/opcache.ini 
 
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY docker/php.ini /usr/local/etc/php/conf.d/laravel.ini
 
-# Salin source code aplikasi ke dalam container
+# copy app source
 COPY . .
 
-# Install dependencies PHP menggunakan Composer
-RUN composer install --no-dev --optimize-autoloader
+# copy vendor from stage 1
+COPY --from=vendor /app/vendor ./vendor
 
-# Install dependencies Node.js dan jalankan build aset frontend
-RUN npm install \
-    && npm run build
+# copy assets from stage 2
+COPY --from=node_modules /app/public/build ./public/build
 
-# Atur ownership dan permission
-RUN chown -R www-data:www-data /var/www/html/storage \
-    && chown -R www-data:www-data /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/storage \
-    && chmod -R 775 /var/www/html/bootstrap/cache
+# storage and cache permissions
+RUN addgroup -g 1000 www && adduser -G www -u 1000 -D www \
+    && chown -R www:www storage bootstrap/cache \
+    && find storage -type d exec chmod 775 {} \; \
+    && find storage -type f exec chmod 664 {} \; \
+    && chmod -R 775 bootstrap/cache
 
-# Atur entrypoint atau command jika diperlukan
-# ENTRYPOINT ["php-fpm"]
-# Set working directory
-# WORKDIR /var/www/html
+USER www
 
-# Copy entrypoint script
-# COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-# ENTRYPOINT ["entrypoint.sh"]
+# ---- stage 4: NGINX as web ----
+FROM nginx:1.27-alpine AS web
+WORKDIR /var/www/html
 
-# Start php-fpm
-CMD ["php-fpm"]
+# get file app from stage php
+COPY --from=php_runtime --chown=nginx:nginx /var/www/html /var/www/html
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+
+# simple health check
+HEALTHCHECK --interval=30s --timeout=3s CMD wget -q0- http://127.0.0.1/health || exit 1
+
