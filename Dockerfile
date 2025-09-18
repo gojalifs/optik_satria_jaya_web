@@ -17,12 +17,39 @@ RUN npm run build
 FROM php:8.3-fpm-alpine AS php_runtime
 WORKDIR /var/www/html
 
-# Install php extensions
-RUN apk add --no-cache \
-    bash git icu-dev libzip-dev oniguruma-dev libzip-dev zip libpng-dev freetype-dev libjpeg-turbo-dev \
-    && docker-php-ext-configure intl \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) intl pdo pdo-sqlite zip gd bcmath opcache 
+# Install php extensions# Penting: toolchain buat compile ekstensi PHP
+# $PHPIZE_DEPS sudah ada di image resmi (autoconf, make, g++)
+# Tambah header yang sering dibutuhkan saat compile
+RUN set -eux; \
+    apk add --no-cache \
+    $PHPIZE_DEPS \
+    linux-headers \
+    bash git \
+    icu-dev \
+    libzip-dev \
+    oniguruma-dev \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    postgresql-dev;  # <- untuk pdo_pgsql
+
+# GD: pastikan pakai freetype & jpeg
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
+
+# Install ekstensi yang diperlukan
+# (intl butuh icu-dev; zip butuh libzip-dev; pdo_pgsql butuh postgresql-dev)
+RUN docker-php-ext-install -j"$(nproc)" \
+      intl \
+      pdo \
+      pdo_pgsql \
+      zip \
+      gd \
+      bcmath \
+      opcache
+
+# (opsional) kalau TIDAK pakai mbstring, bisa di-skip. Kalau mau pakai:
+RUN docker-php-ext-install -j"$(nproc)" mbstring
+
 # opcache tuning
 RUN { \
     echo 'opcache.enable=1'; \
@@ -50,8 +77,8 @@ COPY --from=node_modules /app/public/build ./public/build
 # storage and cache permissions
 RUN addgroup -g 1000 www && adduser -G www -u 1000 -D www \
     && chown -R www:www storage bootstrap/cache \
-    && find storage -type d exec chmod 775 {} \; \
-    && find storage -type f exec chmod 664 {} \; \
+    && find storage -type d -exec chmod 775 {} \; \
+    && find storage -type f -exec chmod 664 {} \; \
     && chmod -R 775 bootstrap/cache
 
 USER www

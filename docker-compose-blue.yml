@@ -1,47 +1,84 @@
 services:
+  # --- PHP-FPM runtime ---
   php-fpm:
-    image: php:8.3-fpm-alpine   # don't expose to traefik
-    container_name: sjo-laravel-blue
-    working_dir: /var/www/html
-    volumes: 
-      - app-blue:/var/www/html
-    networks: [app, web]
-    depends_on: [app-web]
-
-  app-web:
-    image: ${REGISTRY:-local}/sjo-laravel-app:${BUILD_TAG:-blue}
-    container_name: sjo-laravel-blue-web
+    build:
+      context: .
+      target: php_runtime
+    # image: sjo-laravel:dev
+    container_name: sjo-laravel
     environment:
       APP_ENV: ${APP_ENV:-production}
-      APP_KEY: ${APP_KEY}
-      APP_URL: https://optik.hahapa.my.id
-      DB_HOST: ${DB_HOST}
-      DB_DATABASE: ${DB_DATABASE}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
+      APP_KEY: ${APP_KEY:-}
+      APP_URL: ${APP_URL:-https://sjo.hahapa.my.id}
+
+      # --- DB: PostgreSQL ---
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-laravel}
+      DB_USERNAME: ${DB_USERNAME:-laravel}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+
+      # optional redis kalau dipakai
       CACHE_DRIVER: ${CACHE_DRIVER:-file}
       SESSION_DRIVER: ${SESSION_DRIVER:-file}
-      REDIS_HOST: ${REDIS_HOST:-redis}
+
     volumes:
-      - app-blue:/var/www/html
-    networks: [app, web]
-    
-    # ### traefik label: enable from jenkins
+      # share hanya folder yang perlu write
+      - storage:/var/www/html/storage
+      - cache:/var/www/html/bootstrap/cache
+    networks: [app]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # --- Nginx web (served by Traefik) ---
+  app-web:
+    build:
+      context: .
+      target: web
+    # image: laravel-web:dev
+    container_name: laravel-web
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+    volumes:
+      - storage:/var/www/html/storage
+      - cache:/var/www/html/bootstrap/cache
+    networks: [app, traefik]
+    depends_on:
+      - php-fpm
     labels:
-      - "traefik.enable=${BLUE_ACTIVE:-false}"
-      - "traefik.http.routers.laravel.rule=Host(`optik.hahapa.my.id`)"
+      - "traefik.enable=true"
+      - "traefik.http.routers.laravel.rule=Host(`${DOMAIN:-sjo.hahapa.my.id}`)"
       - "traefik.http.routers.laravel.entrypoints=websecure"
       - "traefik.http.routers.laravel.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
-      - "traefik.http.routers.laravel.service=sjo-laravel-blue-svc"
-      - "traefik.http.services.laravel-blue-svc.loadbalancer.server.port=80"
+      - "traefik.http.services.laravel.loadbalancer.server.port=80"
 
-volumes:
-  app-blue:
+  # --- PostgreSQL 16 ---
+  db:
+    image: postgres:16-alpine
+    container_name: pgsql
+    environment:
+      POSTGRES_DB:     ${DB_DATABASE:-laravel}
+      POSTGRES_USER:   ${DB_USERNAME:-laravel}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    networks: [app]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h 127.0.0.1 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
 networks:
-  web:
+  traefik:
     external: true
+    name: web         # ← pakai network Traefik existing
   app:
     driver: bridge
-      
+
+volumes:
+  storage:
+  cache:
+  dbdata:
