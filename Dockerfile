@@ -1,9 +1,17 @@
 # ---- Stage 1: deps PHP (composer) ----
-
-FROM composer:2 AS vendor
+FROM php:8.3-cli AS vendor
 WORKDIR /app
+
+# install tools needed to run composer
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl unzip git \
+    && rm -rf /var/lib/apt/lists/*
+
+# install composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-plugins --no-scripts --no-interaction
+RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-plugins --no-scripts --no-interaction --no-progress
 
 # ---- Stage 2: deps JS (npm) ----
 FROM node:20 AS node_modules
@@ -27,10 +35,6 @@ RUN set -eux; \
     bash git \
     icu-dev \
     libzip-dev \
-    oniguruma-dev \
-    libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
     postgresql-dev;  # <- untuk pdo_pgsql
 
 # GD: pastikan pakai freetype & jpeg
