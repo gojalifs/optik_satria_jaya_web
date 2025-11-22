@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-APP_USER=www
+APP_USER=www-data
 APP_DIR=/var/www/html
 
 echo "Fixing permissions..."
@@ -12,4 +12,4 @@ if [ "$(id -u)" -eq 0 ]; then
 fi
 chmod -R 775 "${APP_DIR}/storage" "${APP_DIR}/bootstrap/cache"
 
-exec su-exec "${APP_USER}" /usr/local/bin/docker-php-entrypoint "$@"
+exec /usr/local/bin/docker-php-entrypoint "$@"
