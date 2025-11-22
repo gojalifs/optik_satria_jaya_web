@@ -4,11 +4,9 @@ services:
     build:
       context: .
       target: php_runtime
-    # image: sjo-laravel:dev
-    container_name: sjo-laravel
     environment:
       APP_ENV: ${APP_ENV:-production}
-      APP_KEY: ${APP_KEY:-}
+      APP_KEY: ${APP_KEY:?APP_KEY is required}
       APP_URL: ${APP_URL:-https://sjo.hahapa.my.id}
 
       # --- DB: PostgreSQL ---
@@ -27,6 +25,8 @@ services:
       # share hanya folder yang perlu write
       - storage:/var/www/html/storage
       - cache:/var/www/html/bootstrap/cache
+    entrypoint: ["/var/www/html/entrypoint.sh"]
+    command: ["php-fpm"]
     networks: [app]
     depends_on:
       db:
@@ -37,8 +37,6 @@ services:
     build:
       context: .
       target: web
-    # image: laravel-web:dev
-    container_name: laravel-web
     environment:
       APP_ENV: ${APP_ENV:-production}
     volumes:
@@ -49,15 +47,15 @@ services:
       - php-fpm
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.laravel.rule=Host(`${DOMAIN:-sjo.hahapa.my.id}`)"
-      - "traefik.http.routers.laravel.entrypoints=websecure"
-      - "traefik.http.routers.laravel.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
-      - "traefik.http.services.laravel.loadbalancer.server.port=80"
+      - "traefik.http.routers.laravel-blue.rule=Host(`${DOMAIN:-sjo.hahapa.my.id}`)"
+      - "traefik.http.routers.laravel-blue.entrypoints=websecure"
+      - "traefik.http.routers.laravel-blue.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
+      - "traefik.http.routers.laravel-blue.service=laravel-blue-svc"
+      - "traefik.http.services.laravel-blue-svc.loadbalancer.server.port=80"
 
   # --- PostgreSQL 16 ---
   db:
     image: postgres:16-alpine
-    container_name: pgsql
     environment:
       POSTGRES_DB:     ${DB_DATABASE:-laravel}
       POSTGRES_USER:   ${DB_USERNAME:-laravel}

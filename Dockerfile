@@ -32,7 +32,7 @@ RUN set -eux; \
     apk add --no-cache \
     $PHPIZE_DEPS \
     linux-headers \
-    bash git \
+    bash git su-exec \
     icu-dev \
     libzip-dev \
     oniguruma-dev \
@@ -63,7 +63,7 @@ RUN { \
     echo 'opcache.enable=1'; \
     echo 'opcache.enable_cli=1'; \
     echo 'opcache.validate_timestamps=1'; \
-    echo 'opcache.jit=1255' \
+    echo 'opcache.jit=1255'; \
     echo 'opcache.memory_consumption=128'; \
     echo 'opcache.interned_strings_buffer=8'; \
     echo 'opcache.max_accelerated_files=4000'; \
@@ -89,7 +89,9 @@ RUN addgroup -g 1000 www && adduser -G www -u 1000 -D www \
     && find storage -type f -exec chmod 664 {} \; \
     && chmod -R 775 bootstrap/cache
 
-USER www
+USER root
+ENTRYPOINT ["/var/www/html/entrypoint.sh"]
+CMD ["php-fpm"]
 
 # ---- stage 4: NGINX as web ----
 FROM nginx:1.27-alpine AS web
@@ -100,5 +102,4 @@ COPY --from=php_runtime --chown=nginx:nginx /var/www/html /var/www/html
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 # simple health check
-HEALTHCHECK --interval=30s --timeout=3s CMD wget -q0- http://127.0.0.1/health || exit 1
-
+HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://127.0.0.1/health || exit 1
