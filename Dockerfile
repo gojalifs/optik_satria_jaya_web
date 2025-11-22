@@ -35,6 +35,10 @@ RUN set -eux; \
     bash git \
     icu-dev \
     libzip-dev \
+    oniguruma-dev \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
     postgresql-dev;  # <- untuk pdo_pgsql
 
 # GD: pastikan pakai freetype & jpeg
