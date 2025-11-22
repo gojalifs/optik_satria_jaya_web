@@ -47,11 +47,11 @@ services:
       - php-fpm
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.laravel-blue.rule=Host(`${DOMAIN:-sjo.hahapa.my.id}`)"
-      - "traefik.http.routers.laravel-blue.entrypoints=websecure"
-      - "traefik.http.routers.laravel-blue.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
-      - "traefik.http.routers.laravel-blue.service=laravel-blue-svc"
-      - "traefik.http.services.laravel-blue-svc.loadbalancer.server.port=80"
+      - "traefik.http.routers.sjo-blue.rule=Host(`${DOMAIN:-sjo.hahapa.my.id}`)"
+      - "traefik.http.routers.sjo-blue.entrypoints=websecure"
+      - "traefik.http.routers.sjo-blue.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
+      - "traefik.http.routers.sjo-blue.service=sjo-blue-svc"
+      - "traefik.http.services.sjo-blue-svc.loadbalancer.server.port=80"
 
   # --- PostgreSQL 16 ---
   db:
