@@ -32,8 +32,8 @@ services:
       db:
         condition: service_healthy
 
-  # --- Nginx web (served by Traefik) ---
-  app-web:
+  # --- App web (served by Traefik) ---
+  sjo-blue:
     build:
       context: .
       target: web
@@ -47,7 +47,7 @@ services:
       - php-fpm
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.sjo-blue.rule=Host(`${DOMAIN:-sjo.hahapa.my.id}`)"
+      - "traefik.http.routers.sjo-blue.rule=Host(`${DOMAIN:-satria.hahsoft.cloud}`)"
       - "traefik.http.routers.sjo-blue.entrypoints=websecure"
       - "traefik.http.routers.sjo-blue.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}"
       - "traefik.http.routers.sjo-blue.service=sjo-blue-svc"
