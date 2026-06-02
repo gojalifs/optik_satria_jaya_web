@@ -78,6 +78,21 @@ function parseRupiah(value: string): number {
     return parseInt(value.replace(/\D/g, '') || '0', 10);
 }
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const API_CREATE_INVOICE = '/api/transaction';
+
+// ─── Date helper ──────────────────────────────────────────────────────────────
+
+function formatIndonesianDate(date: Date = new Date()): string {
+    return date.toLocaleDateString('id-ID', {
+        timeZone: 'Asia/Jakarta',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    });
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface FormState {
@@ -103,12 +118,7 @@ const initialForm: FormState = {
     frame_price: '',
     lens_type: '',
     lens_price: '',
-    date: new Date().toLocaleDateString('id-ID', {
-        timeZone: 'Asia/Jakarta',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    }),
+    date: formatIndonesianDate(),
 };
 
 // ─── CSRF helper ──────────────────────────────────────────────────────────────
@@ -167,7 +177,7 @@ export default function InvoiceCreate() {
                 date: form.date,
             };
 
-            const res = await fetch('/api/transaction', {
+            const res = await fetch(API_CREATE_INVOICE, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
