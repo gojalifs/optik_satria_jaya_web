@@ -7,7 +7,6 @@ use App\Models\Transaction;
 use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\URL;
 use Throwable;
 
 class InvoiceController extends Controller
@@ -33,27 +32,21 @@ class InvoiceController extends Controller
                 'date' => $data['date'] ?? now()->format('Jakarta, d F Y'),
             ];
 
-            // save to database
-            $transaction = Transaction::create($transaction);
+            $filename = preg_replace('/[^a-zA-Z0-9]/', '_', $transaction['invoice_number']);
+            $filename = strtolower($filename);
+            $filename = 'invoice_' . $filename . '.pdf';
 
-            $signedUrl = URL::temporarySignedRoute(
-                'pdf.download',
-                now()->addMinutes(10),
-                ['id' => $transaction->id]
-            );
-
-            return response()->json([
-                'success'       => true,
-                'signed_url'    => $signedUrl,
-            ]);
+            return FacadePdf::loadView('pdf.invoice', [
+                'transaction' => $transaction,
+            ])
+                ->setPaper('a4')
+                ->setOption('isHtml5ParserEnabled', true)
+                ->setOption('isRemoteEnabled', true)
+                ->setOption('isPhpEnabled', true)
+                ->setOption('dpi', 96)
+                ->setOption('defaultFont', 'sans-serif')
+                ->download($filename);
         } catch (Throwable $e) {
-            if (str_contains($e->getMessage(), 'SQLSTATE[23000]')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Duplicate transaction number.',
-                ], 400);
-            }
-
             return response()->json([
                 'success' => false,
                 'message' => 'Error creating invoice: ' . $e->getMessage(),
