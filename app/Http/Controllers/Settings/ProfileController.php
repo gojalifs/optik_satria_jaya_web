@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,6 +19,11 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        Log::info('ProfileController@edit: profile settings page accessed', [
+            'user_id' => $request->user()->id,
+            'ip' => $request->ip(),
+        ]);
+
         return Inertia::render('settings/profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
@@ -37,6 +43,11 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
+        Log::info('ProfileController@update: profile updated successfully', [
+            'user_id' => $request->user()->id,
+            'ip' => $request->ip(),
+        ]);
+
         return to_route('profile.edit');
     }
 
@@ -51,12 +62,23 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
+        Log::info('ProfileController@destroy: account deletion initiated', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'ip' => $request->ip(),
+        ]);
+
         Auth::logout();
 
         $user->delete();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        Log::info('ProfileController@destroy: account deleted successfully', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+        ]);
 
         return redirect('/');
     }
