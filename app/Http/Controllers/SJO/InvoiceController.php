@@ -5,6 +5,7 @@ namespace App\Http\Controllers\SJO;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -172,6 +173,15 @@ class InvoiceController extends Controller
                 ->setOption('dpi', 96)
                 ->setOption('defaultFont', 'sans-serif')
                 ->download($filename);
+        } catch (ModelNotFoundException $e) {
+            Log::warning('InvoiceController@download: transaction not found', [
+                'transaction_id' => $id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Transaction not found.',
+            ], 404);
         } catch (Throwable $e) {
             Log::error('Error downloading invoice: ' . $e->getMessage(), [
                 'transaction_id' => $id,

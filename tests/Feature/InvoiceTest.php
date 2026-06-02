@@ -190,7 +190,7 @@ class InvoiceTest extends TestCase
         $this->assertStringStartsWith('application/pdf', $response->headers->get('Content-Type'));
     }
 
-    public function test_download_invoice_by_nonexistent_id_returns_500(): void
+    public function test_download_invoice_by_nonexistent_id_returns_404(): void
     {
         $signedUrl = URL::temporarySignedRoute(
             'pdf.download',
@@ -200,8 +200,8 @@ class InvoiceTest extends TestCase
 
         $response = $this->get($signedUrl);
 
-        $response->assertStatus(500)
-            ->assertJson(['success' => false]);
+        $response->assertStatus(404)
+            ->assertJson(['success' => false, 'message' => 'Transaction not found.']);
     }
 
     public function test_download_invoice_by_id_without_signature_returns_403(): void
