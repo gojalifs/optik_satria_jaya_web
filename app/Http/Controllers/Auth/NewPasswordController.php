@@ -81,7 +81,6 @@ class NewPasswordController extends Controller
 
         Log::warning('NewPasswordController@store: password reset failed', [
             'email' => $request->email,
-            'status' => $status,
             'ip' => $request->ip(),
         ]);
 

@@ -10,7 +10,7 @@ class PrivacayPolicyController extends Controller
 {
     public function index(Request $request)
     {
-        Log::info('PrivacyPolicyController@index: privacy policy page accessed', [
+        Log::info('PrivacayPolicyController@index: privacy policy page accessed', [
             'ip' => $request->ip(),
             'user_id' => $request->user()?->id,
         ]);

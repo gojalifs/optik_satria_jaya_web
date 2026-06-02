@@ -72,13 +72,13 @@ class ProfileController extends Controller
 
         $user->delete();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
         Log::info('ProfileController@destroy: account deleted successfully', [
             'user_id' => $user->id,
             'email' => $user->email,
         ]);
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
         return redirect('/');
     }
