@@ -7,6 +7,8 @@ use App\Models\Transaction;
 use Barryvdh\DomPDF\Facade\Pdf as FacadePdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Throwable;
 
 class InvoiceController extends Controller
@@ -36,7 +38,7 @@ class InvoiceController extends Controller
             $filename = strtolower($filename);
             $filename = 'invoice_' . $filename . '.pdf';
 
-            return FacadePdf::loadView('pdf.invoice', [
+            $pdfContent = FacadePdf::loadView('pdf.invoice', [
                 'transaction' => $transaction,
             ])
                 ->setPaper('a4')
@@ -45,11 +47,62 @@ class InvoiceController extends Controller
                 ->setOption('isPhpEnabled', true)
                 ->setOption('dpi', 96)
                 ->setOption('defaultFont', 'sans-serif')
-                ->download($filename);
+                ->output();
+
+            Storage::disk('local')->put("invoices/{$filename}", $pdfContent);
+
+            $signedUrl = URL::temporarySignedRoute(
+                'pdf.temp',
+                now()->addHour(),
+                ['filename' => $filename]
+            );
+
+            return response()->json([
+                'success' => true,
+                'url' => $signedUrl,
+            ]);
         } catch (Throwable $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Error creating invoice: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function downloadTemp(string $filename)
+    {
+        try {
+            if (!preg_match('/^[a-z0-9_]+\.pdf$/', $filename)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid filename.',
+                ], 400);
+            }
+
+            $path = "invoices/{$filename}";
+
+            if (!Storage::disk('local')->exists($path)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invoice file not found.',
+                ], 404);
+            }
+
+            $content = Storage::disk('local')->get($path);
+
+            return response($content, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            ]);
+        } catch (Throwable $e) {
+            Log::error('Error downloading temp invoice: ' . $e->getMessage(), [
+                'filename' => $filename,
+                'exception' => $e,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error downloading invoice: ' . $e->getMessage(),
             ], 500);
         }
     }

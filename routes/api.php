@@ -10,6 +10,10 @@ Route::get('/user', function (Request $request) {
 
 Route::post('transaction', [InvoiceController::class, 'create']);
 
+Route::get('/pdf/temp/{filename}', [InvoiceController::class, 'downloadTemp'])
+    ->name('pdf.temp')
+    ->middleware(['signed', 'throttle:5,1']);
+
 Route::get('/pdf/{id}', [InvoiceController::class, 'download'])
     ->name('pdf.download')
     ->middleware(['signed', 'throttle:5,1']);
