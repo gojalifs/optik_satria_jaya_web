@@ -15,6 +15,11 @@ class InvoiceController extends Controller
 {
     public function create(Request $request)
     {
+        Log::info('InvoiceController@create: invoice creation requested', [
+            'ip' => $request->ip(),
+            'user_id' => $request->user()?->id,
+        ]);
+
         try {
             $json = $request->getContent();
             $data = json_decode($json, true);
@@ -57,11 +62,25 @@ class InvoiceController extends Controller
                 ['filename' => $filename]
             );
 
+            Log::info('InvoiceController@create: invoice created successfully', [
+                'invoice_number' => $transaction['invoice_number'],
+                'filename' => $filename,
+                'ip' => $request->ip(),
+                'user_id' => $request->user()?->id,
+            ]);
+
             return response()->json([
                 'success' => true,
                 'url' => $signedUrl,
             ]);
         } catch (Throwable $e) {
+            Log::error('InvoiceController@create: error creating invoice', [
+                'ip' => $request->ip(),
+                'user_id' => $request->user()?->id,
+                'error' => $e->getMessage(),
+                'exception' => $e,
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error creating invoice: ' . $e->getMessage(),
@@ -71,8 +90,16 @@ class InvoiceController extends Controller
 
     public function downloadTemp(string $filename)
     {
+        Log::info('InvoiceController@downloadTemp: signed URL access for invoice download', [
+            'filename' => $filename,
+        ]);
+
         try {
             if (!preg_match('/^[a-z0-9_]+\.pdf$/', $filename)) {
+                Log::warning('InvoiceController@downloadTemp: invalid filename rejected', [
+                    'filename' => $filename,
+                ]);
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid filename.',
@@ -82,6 +109,11 @@ class InvoiceController extends Controller
             $path = "invoices/{$filename}";
 
             if (!Storage::disk('local')->exists($path)) {
+                Log::warning('InvoiceController@downloadTemp: invoice file not found', [
+                    'filename' => $filename,
+                    'path' => $path,
+                ]);
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Invoice file not found.',
@@ -89,6 +121,10 @@ class InvoiceController extends Controller
             }
 
             $content = Storage::disk('local')->get($path);
+
+            Log::info('InvoiceController@downloadTemp: invoice downloaded successfully', [
+                'filename' => $filename,
+            ]);
 
             return response($content, 200, [
                 'Content-Type' => 'application/pdf',
@@ -109,12 +145,22 @@ class InvoiceController extends Controller
 
     public function download($id)
     {
+        Log::info('InvoiceController@download: invoice download requested', [
+            'transaction_id' => $id,
+        ]);
+
         try {
             $transaction = Transaction::findOrFail($id);
 
             $filename = preg_replace('/[^a-zA-Z0-9]/', '_', $transaction->invoice_number);
             $filename = strtolower($filename);
             $filename = 'invoice_' . $filename . '.pdf';
+
+            Log::info('InvoiceController@download: invoice downloaded successfully', [
+                'transaction_id' => $id,
+                'invoice_number' => $transaction->invoice_number,
+                'filename' => $filename,
+            ]);
 
             return FacadePdf::loadView('pdf.invoice', [
                 'transaction' => $transaction,

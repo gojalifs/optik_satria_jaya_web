@@ -8,6 +8,7 @@ use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
@@ -22,6 +23,11 @@ class NewPasswordController extends Controller
      */
     public function create(Request $request): Response
     {
+        Log::info('NewPasswordController@create: password reset page accessed', [
+            'email' => $request->email,
+            'ip' => $request->ip(),
+        ]);
+
         return Inertia::render('auth/reset-password', [
             'email' => $request->email,
             'token' => $request->route('token'),
@@ -35,6 +41,11 @@ class NewPasswordController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        Log::info('NewPasswordController@store: password reset attempt', [
+            'email' => $request->email,
+            'ip' => $request->ip(),
+        ]);
+
         $request->validate([
             'token' => 'required',
             'email' => 'required|email',
@@ -60,8 +71,18 @@ class NewPasswordController extends Controller
         // the application's home authenticated view. If there is an error we can
         // redirect them back to where they came from with their error message.
         if ($status == Password::PasswordReset) {
+            Log::info('NewPasswordController@store: password reset successful', [
+                'email' => $request->email,
+                'ip' => $request->ip(),
+            ]);
+
             return to_route('login')->with('status', __($status));
         }
+
+        Log::warning('NewPasswordController@store: password reset failed', [
+            'email' => $request->email,
+            'ip' => $request->ip(),
+        ]);
 
         throw ValidationException::withMessages([
             'email' => [__($status)],
