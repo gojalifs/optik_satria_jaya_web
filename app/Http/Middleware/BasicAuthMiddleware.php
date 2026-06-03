@@ -15,11 +15,15 @@ class BasicAuthMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $username = $request->getUser();
-        $password = $request->getPassword();
-
         $validUsername = env('USERNAME');
         $validPassword = env('PASSWORD');
+
+        if (!$validUsername || !$validPassword) {
+            abort(500, 'Invoice auth credentials are not configured.');
+        }
+
+        $username = $request->getUser();
+        $password = $request->getPassword();
 
         if (
             !$username ||
