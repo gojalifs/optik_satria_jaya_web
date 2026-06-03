@@ -13,7 +13,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
+});
 
+Route::middleware(['basic.auth'])->group(function () {
     Route::get('invoice/create', function () {
         return Inertia::render('invoice/create');
     })->name('invoice.create');
