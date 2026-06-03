@@ -15,6 +15,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 });
 
+Route::middleware(['basic.auth'])->group(function () {
+    Route::get('invoice/create', function () {
+        return Inertia::render('invoice/create');
+    })->name('invoice.create');
+});
+
 // Route::middleware(['signature_verification'])->group(function(){
 Route::post('test', [InvoiceController::class, 'test']);
 // });
