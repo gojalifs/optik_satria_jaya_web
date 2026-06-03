@@ -85,6 +85,7 @@ export default function Welcome() {
                         <a href="#cabang" className="hover:text-indigo-600 transition-colors">Cabang</a>
                         <a href="#testimoni" className="hover:text-indigo-600 transition-colors">Testimoni</a>
                         <a href="#kontak" className="hover:text-indigo-600 transition-colors">Kontak</a>
+                        <a href="/invoice/create" className="hover:text-indigo-600 transition-colors">Invoice</a>
                     </nav>
 
                     {/* Auth buttons */}
@@ -132,6 +133,7 @@ export default function Welcome() {
                             <a href="#cabang" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">Cabang</a>
                             <a href="#testimoni" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">Testimoni</a>
                             <a href="#kontak" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">Kontak</a>
+                            <a href="/invoice/create" onClick={() => setMenuOpen(false)} className="hover:text-indigo-600">Invoice</a>
                         </nav>
                         <div className="mt-3 flex flex-col gap-2">
                             {auth.user ? (

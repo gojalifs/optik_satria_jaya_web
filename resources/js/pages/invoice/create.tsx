@@ -218,14 +218,13 @@ export default function InvoiceCreate() {
         <>
             <Head title="Buat Invoice" />
 
-            {/* ── Gradient background ── */}
-            <div className="relative min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500">
-                {/* Decorative blobs */}
-                <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                    <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
-                    <div className="absolute -right-40 -bottom-40 h-96 w-96 rounded-full bg-pink-300/20 blur-3xl" />
-                    <div className="absolute top-1/2 left-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple-300/20 blur-2xl" />
-                </div>
+            {/* ── Photo background with glass overlay ── */}
+            <div
+                className="relative min-h-screen bg-gray-600 bg-cover bg-center"
+                style={{ backgroundImage: 'url(https://images.unsplash.com/photo-0are122T4ho?auto=format&fit=crop&w=1920&q=80)' }}
+            >
+                {/* Dark glass overlay */}
+                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
 
                 <div className="relative z-10 flex min-h-screen items-start justify-center px-4 py-10">
                     <div className="w-full max-w-3xl">
@@ -414,6 +413,19 @@ export default function InvoiceCreate() {
                                 )}
                             </Button>
                         </form>
+
+                        {/* ── Logout ── */}
+                        <div className="mt-4 text-center">
+                            <form method="POST" action="/invoice/logout">
+                                <input type="hidden" name="_token" value={getCsrfToken()} />
+                                <button
+                                    type="submit"
+                                    className="cursor-pointer border-0 bg-transparent p-0 text-sm text-white/50 transition hover:text-white/80"
+                                >
+                                    Keluar
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>

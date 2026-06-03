@@ -21,6 +21,11 @@ Route::middleware(['basic.auth'])->group(function () {
     })->name('invoice.create');
 });
 
+Route::post('invoice/logout', function () {
+    return redirect()->route('invoice.create')
+        ->withoutCookie('invoice_auth');
+})->name('invoice.logout');
+
 // Route::middleware(['signature_verification'])->group(function(){
 Route::post('test', [InvoiceController::class, 'test']);
 // });
